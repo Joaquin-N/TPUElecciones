@@ -1,7 +1,5 @@
 package interfaz;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -9,9 +7,14 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import negocio.*;
+import soporte.ImportadorAgrupaciones;
+import soporte.ImportadorRegiones;
 
+import javax.swing.*;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Collection;
 
 public class Controller
 {
@@ -42,13 +45,11 @@ public class Controller
     TextField txtDirectorio;
 
     Pais p;
+    String todos = "<todos>";
 
     public void initialize()
     {
-        cmbDistrito.setDisable(true);
-        cmbSeccion.setDisable(true);
-        cmbCircuito.setDisable(true);
-        cmbMesa.setDisable(true);
+        disableAll();
     }
 
     public void btnDirectorio_OnPressed(ActionEvent actionEvent)
@@ -58,100 +59,122 @@ public class Controller
         File directorio = dc.showDialog(null);
         if (directorio != null)
         {
-            // TODO: validar que los archivos esten en la carpeta selecionada
             String path = directorio.getAbsolutePath();
-            txtDirectorio.setText(path);
 
             ImportadorRegiones ir = new ImportadorRegiones();
             ImportadorAgrupaciones ia = new ImportadorAgrupaciones();
-            p = ir.cargarRegiones(path);
-            ia.cargarAgrupaciones(path);
-
-            ArrayList distritos = new ArrayList<>();
-            distritos.add("<todos>");
-            distritos.addAll(p.listarDistritos());
-            cmbDistrito.getItems().addAll(distritos);
-            cmbDistrito.setValue("<todos>");
-            cmbDistrito.setDisable(false);
+            try
+            {
+                p = ir.cargarRegiones(path);
+                ia.cargarAgrupaciones(path);
+                txtDirectorio.setText(path);
+                enableAndLoad(cmbDistrito, p);
+                btnFiltrar.setDisable(false);
+            }
+            catch(FileNotFoundException e)
+            {
+                disableAll();
+                txtDirectorio.setText("");
+                Object[] options = {"Aceptar"};
+                JOptionPane.showOptionDialog(null,
+                        "No se encontraron los archivos en el directorio indicado",
+                        "Error",
+                        JOptionPane.OK_OPTION, JOptionPane.ERROR_MESSAGE, null, options, options[0]);
+            }
         }
+    }
+
+    private void disableAll()
+    {
+        disableAndClear(cmbDistrito);
+        disableAndClear(cmbSeccion);
+        disableAndClear(cmbCircuito);
+        disableAndClear(cmbMesa);
+        btnFiltrar.setDisable(true);
+    }
+
+    /** Toma como parámetro un ComboBox, elimina su contenido y lo deshabilita */
+    private void disableAndClear(ComboBox combo)
+    {
+        combo.getItems().clear();
+        combo.setDisable(true);
+    }
+
+    /** Toma como parámetro un ComboBox y un objeto Region y carga el ComboBox con las subdivisiones de la Region
+     *  Agrega también al comboBox un elemento "<todos>"
+     *  Habilita el ComboBox */
+    private void enableAndLoad(ComboBox combo, Region r)
+    {
+        ArrayList contenido = new ArrayList<>();
+        contenido.add(todos);
+        contenido.addAll(r.listarSubdivisiones());
+        combo.getItems().clear();
+        combo.getItems().addAll(contenido);
+        combo.setValue(todos);
+        combo.setDisable(false);
     }
 
     public void cmbDistrito_SelectionChanged(ActionEvent actionEvent)
     {
         if (cmbDistrito.getValue() == null) return;
-        if (cmbDistrito.getValue().toString().equals("<todos>"))
+        if (cmbDistrito.getValue().toString().equals(todos))
         {
-            cmbSeccion.getItems().clear();
-            cmbSeccion.setDisable(true);
-            cmbCircuito.getItems().clear();
-            cmbCircuito.setDisable(true);
-            cmbMesa.getItems().clear();
-            cmbMesa.setDisable(true);
+            disableAndClear(cmbSeccion);
+            disableAndClear(cmbCircuito);
+            disableAndClear(cmbMesa);
         }
         else
         {
-            Distrito d = (Distrito) cmbDistrito.getValue();
-            ArrayList secciones = new ArrayList<>();
-            secciones.add("<todos>");
-            secciones.addAll(d.listarSecciones());
-            cmbSeccion.getItems().addAll(secciones);
-            cmbSeccion.setValue("<todos>");
-            cmbSeccion.setDisable(false);
+            enableAndLoad(cmbSeccion, (Region)cmbDistrito.getValue());
         }
     }
 
     public void cmbSeccion_SelectionChanged(ActionEvent actionEvent)
     {
         if (cmbSeccion.getValue() == null) return;
-        if (cmbSeccion.getValue().toString().equals("<todos>"))
+        if (cmbSeccion.getValue().toString().equals(todos))
         {
-            cmbCircuito.getItems().clear();
-            cmbCircuito.setDisable(true);
-            cmbMesa.getItems().clear();
-            cmbMesa.setDisable(true);
+            disableAndClear(cmbCircuito);
+            disableAndClear(cmbMesa);
         }
         else
         {
-            Seccion s = (Seccion) cmbSeccion.getValue();
-            ArrayList circuitos = new ArrayList<>();
-            circuitos.add("<todos>");
-            circuitos.addAll(s.listarCircuitos());
-            cmbCircuito.getItems().addAll(circuitos);
-            cmbCircuito.setValue("<todos>");
-            cmbCircuito.setDisable(false);
+            enableAndLoad(cmbCircuito, (Region)cmbSeccion.getValue());
         }
     }
 
     public void cmbCircuito_SelectionChanged(ActionEvent actionEvent)
     {
         if (cmbCircuito.getValue() == null) return;
-        if (cmbCircuito.getValue().toString().equals("<todos>"))
+        if (cmbCircuito.getValue().toString().equals(todos))
         {
-            cmbMesa.getItems().clear();
-            cmbMesa.setDisable(true);
+            disableAndClear(cmbMesa);
         }
         else
         {
-            Circuito c = (Circuito) cmbCircuito.getValue();
-            ArrayList mesas = new ArrayList<>();
-            mesas.add("<todos>");
-            mesas.addAll(c.listarMesas());
-            cmbMesa.getItems().addAll(mesas);
-            cmbMesa.setValue("<todos>");
-            cmbMesa.setDisable(false);
+            enableAndLoad(cmbMesa, (Region)cmbCircuito.getValue());
         }
     }
 
     public void btnFiltrar_OnPressed(ActionEvent actionEvent)
     {
-        ObservableList<Conteo> conteos = FXCollections.observableArrayList();
+        if (cmbDistrito.getValue() != null)
+        {
+            colAgrupacion.setCellValueFactory(new PropertyValueFactory<Conteo, String>("nombreAgrupacion"));
+            colVotos.setCellValueFactory(new PropertyValueFactory<Conteo, String>("cantidad"));
 
-        colAgrupacion.setCellValueFactory(new PropertyValueFactory<Conteo, String>("nombreAgrupacion"));
-        colVotos.setCellValueFactory(new PropertyValueFactory<Conteo, String>("cantidad"));
+            tblConteos.getItems().clear();
+            tblConteos.getItems().addAll(buscarConteos());
+        }
+    }
 
-        tblConteos.getItems().clear();
-        tblConteos.getItems().addAll(conteos);
-
+    private Collection<Conteo> buscarConteos()
+    {
+        if (cmbDistrito.getValue().equals(todos)) return p.getConteos();
+        if (cmbSeccion.getValue().equals(todos)) return ((Distrito)cmbDistrito.getValue()).getConteos();
+        if (cmbCircuito.getValue().equals(todos)) return ((Seccion)cmbSeccion.getValue()).getConteos();
+        if (cmbMesa.getValue().equals(todos)) return ((Circuito)cmbCircuito.getValue()).getConteos();
+        return ((Mesa)cmbMesa.getValue()).getConteos();
     }
 
     public void btnSalir_OnPressed(ActionEvent actionEvent)

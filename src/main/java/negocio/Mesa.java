@@ -2,6 +2,8 @@ package negocio;
 
 import soporte.TSBHashtable;
 
+import java.util.Collection;
+
 public class Mesa
 {
     private String codigo;
@@ -12,6 +14,8 @@ public class Mesa
         this.codigo = codigo;
         conteos = new TSBHashtable<>();
     }
+
+    public Collection<Conteo> getConteos() { return conteos.values(); }
 
     @Override
     public String toString()

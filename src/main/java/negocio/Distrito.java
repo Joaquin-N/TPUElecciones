@@ -4,7 +4,7 @@ import soporte.TSBHashtable;
 
 import java.util.Collection;
 
-public class Distrito
+public class Distrito implements Region
 {
     private String codigo;
     private String nombre;
@@ -35,20 +35,20 @@ public class Distrito
     }
     public void setNombre(String nombre) { this.nombre = nombre; }
 
-    public Seccion buscarSeccion(String codigo)
+    public Seccion obtenerSeccion(String codigo)
     {
-        return secciones.get(codigo);
+        Seccion s = secciones.get(codigo);
+        if (s == null) s = new Seccion(codigo);
+        secciones.put(codigo, s);
+        return s;
     }
 
-    public void agregarSeccion(Seccion s)
-    {
-        secciones.put(s.getCodigo(), s);
-    }
-
-    public Collection<Seccion> listarSecciones()
+    public Collection<Seccion> listarSubdivisiones()
     {
         return secciones.values();
     }
+
+    public Collection<Conteo> getConteos() { return conteos.values(); }
 
     @Override
     public String toString()

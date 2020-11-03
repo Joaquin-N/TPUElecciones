@@ -4,7 +4,7 @@ import soporte.TSBHashtable;
 
 import java.util.Collection;
 
-public class Circuito
+public class Circuito implements Region
 {
     private String codigo;
     private String nombre;
@@ -29,10 +29,12 @@ public class Circuito
         return nombre;
     }
 
-    public Collection<Mesa> listarMesas()
+    public Collection<Mesa> listarSubdivisiones()
     {
         return mesas.values();
     }
+
+    public Collection<Conteo> getConteos() { return conteos.values(); }
 
     @Override
     public String toString()

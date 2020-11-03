@@ -1,5 +1,6 @@
-package negocio;
+package soporte;
 
+import negocio.Agrupacion;
 import soporte.TSBHashtable;
 
 import java.io.File;
@@ -9,11 +10,11 @@ import java.util.Scanner;
 public class ImportadorAgrupaciones
 {
     TSBHashtable<String, Agrupacion> agrupaciones = new TSBHashtable<>();
-    public TSBHashtable<String, Agrupacion> cargarAgrupaciones(String path)
+    public TSBHashtable<String, Agrupacion> cargarAgrupaciones(String path) throws FileNotFoundException
     {
         File f = new File(path + "/descripcion_postulaciones.dsv");
-        try (Scanner archivoAgrupaciones = new Scanner(f))
-        {
+        Scanner archivoAgrupaciones = new Scanner(f);
+
             // Con el primer nextLine limpiamos las cabeceras
             archivoAgrupaciones.nextLine();
             while(archivoAgrupaciones.hasNextLine())
@@ -27,11 +28,6 @@ public class ImportadorAgrupaciones
                     if (!agrupaciones.containsKey(codigo)) agrupaciones.put(codigo, new Agrupacion(codigo, nombre));
                 }
             }
-        } catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-        }
-        System.out.println(agrupaciones);
         return agrupaciones;
     }
 }

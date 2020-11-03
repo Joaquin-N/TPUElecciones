@@ -3,9 +3,8 @@ package negocio;
 import soporte.TSBHashtable;
 
 import java.util.Collection;
-import java.util.List;
 
-public class Pais
+public class Pais implements Region
 {
     private String codigo;
     private String nombre;
@@ -22,20 +21,20 @@ public class Pais
         conteos = new TSBHashtable<>();
     }
 
-    public void agregarDistrito(Distrito d)
+    public Distrito obtenerDistrito(String codigo)
     {
-        distritos.put(d.getCodigo(), d);
+        Distrito d = distritos.get(codigo);
+        if (d == null) d = new Distrito(codigo);
+        distritos.put(codigo, d);
+        return d;
     }
 
-    public Distrito buscarDistrito(String codigo)
-    {
-        return distritos.get(codigo);
-    }
-
-    public Collection<Distrito> listarDistritos()
+    public Collection<Distrito> listarSubdivisiones()
     {
         return distritos.values();
     }
+
+    public Collection<Conteo> getConteos() { return conteos.values(); }
 
     @Override
     public String toString()
