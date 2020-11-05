@@ -17,6 +17,17 @@ public class Mesa
 
     public Collection<Conteo> getConteos() { return conteos.values(); }
 
+    public void sumar(Agrupacion a, int votos)
+    {
+        Conteo c = conteos.get(a.getCodigo());
+        if (c == null)
+        {
+            c = new Conteo(a);
+            conteos.put(a.getCodigo(), c);
+        }
+        c.sumar(votos);
+    }
+
     @Override
     public String toString()
     {

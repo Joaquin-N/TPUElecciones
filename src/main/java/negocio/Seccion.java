@@ -4,33 +4,27 @@ import soporte.TSBHashtable;
 
 import java.util.Collection;
 
-public class Seccion implements Region
+public class Seccion extends Region
 {
-    private String codigo;
-    private String nombre;
     private TSBHashtable<String, Circuito> circuitos;
-    private TSBHashtable<String, Conteo> conteos;
 
     public Seccion(String codigo) { this(codigo, ""); }
     public Seccion(String codigo, String nombre)
     {
-        this.codigo = codigo;
-        this.nombre = nombre;
+        super(codigo, nombre);
         circuitos = new TSBHashtable<>();
-        conteos = new TSBHashtable<>();
     }
 
-    public String getCodigo()
+    public Circuito obtenerCircuito(String codigo)
     {
-        return codigo;
+        Circuito c = circuitos.get(codigo);
+        if (c == null)
+        {
+            c = new Circuito(codigo);
+            circuitos.put(codigo, c);
+        }
+        return c;
     }
-
-    public String getNombre()
-    {
-        return nombre;
-    }
-
-    public void setNombre(String nombre){ this.nombre = nombre; }
 
     public void agregarCircuito(Circuito c)
     {
@@ -40,13 +34,5 @@ public class Seccion implements Region
     public Collection<Circuito> listarSubdivisiones()
     {
         return circuitos.values();
-    }
-
-    public Collection<Conteo> getConteos() { return conteos.values(); }
-
-    @Override
-    public String toString()
-    {
-        return nombre;
     }
 }

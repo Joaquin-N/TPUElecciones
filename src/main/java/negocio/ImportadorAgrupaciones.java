@@ -1,6 +1,5 @@
-package soporte;
+package negocio;
 
-import negocio.Agrupacion;
 import soporte.TSBHashtable;
 
 import java.io.File;

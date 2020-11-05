@@ -5,10 +5,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.Stage;
 import negocio.*;
-import soporte.ImportadorAgrupaciones;
-import soporte.ImportadorRegiones;
+import persistencia.DBHelper;
+import persistencia.DataManager;
 
 import javax.swing.*;
 import java.io.File;
@@ -44,6 +43,7 @@ public class Controller
     @FXML
     TextField txtDirectorio;
 
+    Gestor gestor = new Gestor();
     Pais p;
     String todos = "<todos>";
 
@@ -60,13 +60,9 @@ public class Controller
         if (directorio != null)
         {
             String path = directorio.getAbsolutePath();
-
-            ImportadorRegiones ir = new ImportadorRegiones();
-            ImportadorAgrupaciones ia = new ImportadorAgrupaciones();
             try
             {
-                p = ir.cargarRegiones(path);
-                ia.cargarAgrupaciones(path);
+                p = gestor.cargarDatosDeArchivos(path);
                 txtDirectorio.setText(path);
                 enableAndLoad(cmbDistrito, p);
                 btnFiltrar.setDisable(false);
@@ -179,7 +175,9 @@ public class Controller
 
     public void btnSalir_OnPressed(ActionEvent actionEvent)
     {
-        Stage stage = (Stage) btnSalir.getScene().getWindow();
-        stage.close();
+        DataManager dm = new DataManager();
+        dm.clearData();
+//        Stage stage = (Stage) btnSalir.getScene().getWindow();
+//        stage.close();
     }
 }
