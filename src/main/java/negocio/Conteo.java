@@ -1,5 +1,7 @@
 package negocio;
 
+import java.util.Objects;
+
 public class Conteo
 {
     private Agrupacion agrupacion;
@@ -26,6 +28,24 @@ public class Conteo
     public int getCantidad()
     {
         return cantidad;
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Conteo conteo = (Conteo) o;
+        return cantidad == conteo.cantidad &&
+                agrupacion.equals(conteo.agrupacion);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int hash = Objects.hash(agrupacion) * 67;
+        hash += Objects.hash(cantidad) * 23;
+        return hash;
     }
 
     public void sumar(int cantidad)

@@ -1,17 +1,20 @@
 package interfaz;
 
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.Stage;
 import negocio.*;
-import persistencia.DBHelper;
-import persistencia.DataManager;
 
 import javax.swing.*;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -23,15 +26,19 @@ public class Controller
     Button btnFiltrar;
     @FXML
     Button btnSalir;
+    @FXML
+    Button btnGuardar;
+    @FXML
+    Button btnCargar;
 
     @FXML
-    ComboBox cmbDistrito;
+    ComboBox<Region> cmbDistrito;
     @FXML
-    ComboBox cmbSeccion;
+    ComboBox<Region> cmbSeccion;
     @FXML
-    ComboBox cmbCircuito;
+    ComboBox<Region> cmbCircuito;
     @FXML
-    ComboBox cmbMesa;
+    ComboBox<Region> cmbMesa;
 
     @FXML
     TableView tblConteos;
@@ -41,69 +48,232 @@ public class Controller
     TableColumn colVotos;
 
     @FXML
+    Pane pane;
+    @FXML
     TextField txtDirectorio;
 
-    Gestor gestor = new Gestor();
-    Pais p;
-    String todos = "<todos>";
+    GestorElecciones ge = new GestorElecciones();
+    boolean dbData = false;
+    Region p;
+    Region todos = new Region("-1", "<todos>");
 
     public void initialize()
     {
-        disableAll();
+        disableFields();
     }
 
     public void btnDirectorio_OnPressed(ActionEvent actionEvent)
     {
+        /* Abre una instancia del explorador de archivos para que el usuario seleccione el directorio donde
+         * se ubican los archivos */
         DirectoryChooser dc = new DirectoryChooser();
         dc.setTitle("Seleccione el directorio en donde ubicar los archivos");
         File directorio = dc.showDialog(null);
+
+        // Valida que se haya seleccionado un directorio
         if (directorio != null)
         {
             String path = directorio.getAbsolutePath();
-            try
-            {
-                p = gestor.cargarDatosDeArchivos(path);
+
+            // Habilita el cursor de espera
+            pane.getScene().setCursor(Cursor.WAIT);
+            disableButtons(true);
+            disableFields();
+
+            // Llama al método cargarArchivos() del GestorElecciones
+            Task<Void> task = new Task<Void>() {
+                @Override
+                public Void call() throws FileNotFoundException
+                {
+                    p = ge.cargarArchivos(path);
+                    return null ;
+                }
+            };
+
+            // Carga las regiones en pantalla y habilita los controles
+            task.setOnSucceeded(e -> {
                 txtDirectorio.setText(path);
                 enableAndLoad(cmbDistrito, p);
-                btnFiltrar.setDisable(false);
-            }
-            catch(FileNotFoundException e)
-            {
-                disableAll();
+                dbData = false;
+                btnFiltrar_OnPressed(new ActionEvent());
+                disableButtons(false);
+                pane.getScene().setCursor(Cursor.DEFAULT);
+            });
+
+            task.setOnFailed(e -> {
+                disableButtons(false);
+                pane.getScene().setCursor(Cursor.DEFAULT);
                 txtDirectorio.setText("");
                 Object[] options = {"Aceptar"};
                 JOptionPane.showOptionDialog(null,
                         "No se encontraron los archivos en el directorio indicado",
                         "Error",
                         JOptionPane.OK_OPTION, JOptionPane.ERROR_MESSAGE, null, options, options[0]);
-            }
+            });
+            Thread t = new Thread(task);
+            t.setDaemon(true);
+            t.start();
         }
     }
 
-    private void disableAll()
+
+    public void btnCargar_OnPressed(ActionEvent actionEvent)
+    {
+        // Habilita el cursor de espera
+        pane.getScene().setCursor(Cursor.WAIT);
+        disableButtons(true);
+        disableFields();
+        txtDirectorio.setText("");
+
+        // Llama al método cargarRegiones() del GestorElecciones para cargar los datos desde la base de datos
+        Task<Void> task = new Task<Void>() {
+            @Override
+            public Void call()
+            {
+                try
+                {
+                    p = ge.cargarRegiones();
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+                return null ;
+            }
+        };
+
+        // Carga los distritos en el ComboBox, si se encuentran datos
+        task.setOnSucceeded(e -> {
+            pane.getScene().setCursor(Cursor.DEFAULT);
+            disableButtons(false);
+            if(p == null)
+            {
+                Object[] options = {"Aceptar"};
+                JOptionPane.showOptionDialog(null,
+                        "No se encontraron datos en la base de datos",
+                        "Error",
+                        JOptionPane.OK_OPTION, JOptionPane.ERROR_MESSAGE, null, options, options[0]);
+                return;
+            }
+            enableAndLoad(cmbDistrito, p);
+            dbData = true;
+            btnFiltrar_OnPressed(new ActionEvent());
+            btnGuardar.setDisable(true);
+            pane.getScene().setCursor(Cursor.DEFAULT);
+        });
+
+        task.setOnFailed(e -> {
+            disableButtons(false);
+            pane.getScene().setCursor(Cursor.DEFAULT);
+            disableFields();
+            Object[] options = {"Aceptar"};
+            JOptionPane.showOptionDialog(null,
+                    "No se pudo conectar con la base de datos",
+                    "Error",
+                    JOptionPane.OK_OPTION, JOptionPane.ERROR_MESSAGE, null, options, options[0]);
+        });
+        Thread t = new Thread(task);
+        t.setDaemon(true);
+        t.start();
+    }
+
+    /*
+     * Llama al método guardarDatos del GestorElecciones para almacenar los datos en la base de datos.
+     */
+    public void btnGuardar_OnPressed(ActionEvent actionEvent)
+    {
+        // Habilita el cursor de espera
+        pane.getScene().setCursor(Cursor.WAIT);
+        disableButtons(true);
+        disableCombos(true);
+
+        // Llama al método GuardarRegiones() del GestorElecciones
+        Task<Void> task = new Task<Void>() {
+            @Override
+            public Void call()
+            {
+                try
+                {
+                    ge.guardarDatos(p);
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+
+                return null ;
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            disableButtons(false);
+            disableCombos(false);
+            pane.getScene().setCursor(Cursor.DEFAULT);
+        });
+
+        task.setOnFailed(e -> {
+            disableButtons(false);
+            disableCombos(false);
+            pane.getScene().setCursor(Cursor.DEFAULT);
+            Object[] options = {"Aceptar"};
+            JOptionPane.showOptionDialog(null,
+                    "No se pudo conectar con la base de datos",
+                    "Error",
+                    JOptionPane.OK_OPTION, JOptionPane.ERROR_MESSAGE, null, options, options[0]);
+        });
+        Thread t = new Thread(task);
+        t.setDaemon(true);
+        t.start();
+    }
+
+    /*
+     * Deshabilita los controles en pantalla
+     */
+    private void disableFields()
     {
         disableAndClear(cmbDistrito);
         disableAndClear(cmbSeccion);
         disableAndClear(cmbCircuito);
         disableAndClear(cmbMesa);
         btnFiltrar.setDisable(true);
+        btnGuardar.setDisable(true);
+        tblConteos.getItems().clear();
     }
 
-    /** Toma como parámetro un ComboBox, elimina su contenido y lo deshabilita */
-    private void disableAndClear(ComboBox combo)
+    private void disableButtons(boolean disable)
+    {
+        btnFiltrar.setDisable(disable);
+        btnDirectorio.setDisable(disable);
+        btnCargar.setDisable(disable);
+        btnGuardar.setDisable(disable);
+    }
+
+    private void disableCombos(boolean disable)
+    {
+        cmbDistrito.setDisable(disable);
+        cmbSeccion.setDisable(disable);
+        cmbCircuito.setDisable(disable);
+        cmbMesa.setDisable(disable);
+    }
+
+    /*
+     * Toma como parámetro un ComboBox, elimina su contenido y lo deshabilita
+     */
+    private void disableAndClear(ComboBox<Region> combo)
     {
         combo.getItems().clear();
         combo.setDisable(true);
     }
 
-    /** Toma como parámetro un ComboBox y un objeto Region y carga el ComboBox con las subdivisiones de la Region
+    /* Toma como parámetro un ComboBox y un objeto Region y carga el ComboBox con las subdivisiones de la Region
      *  Agrega también al comboBox un elemento "<todos>"
-     *  Habilita el ComboBox */
-    private void enableAndLoad(ComboBox combo, Region r)
+     *  Habilita el ComboBox
+     */
+    private void enableAndLoad(ComboBox<Region> combo, Region r)
     {
         ArrayList contenido = new ArrayList<>();
         contenido.add(todos);
-        contenido.addAll(r.listarSubdivisiones());
+        contenido.addAll(r.listarSubregiones());
         combo.getItems().clear();
         combo.getItems().addAll(contenido);
         combo.setValue(todos);
@@ -113,7 +283,7 @@ public class Controller
     public void cmbDistrito_SelectionChanged(ActionEvent actionEvent)
     {
         if (cmbDistrito.getValue() == null) return;
-        if (cmbDistrito.getValue().toString().equals(todos))
+        if (cmbDistrito.getValue().equals(todos))
         {
             disableAndClear(cmbSeccion);
             disableAndClear(cmbCircuito);
@@ -128,7 +298,7 @@ public class Controller
     public void cmbSeccion_SelectionChanged(ActionEvent actionEvent)
     {
         if (cmbSeccion.getValue() == null) return;
-        if (cmbSeccion.getValue().toString().equals(todos))
+        if (cmbSeccion.getValue().equals(todos))
         {
             disableAndClear(cmbCircuito);
             disableAndClear(cmbMesa);
@@ -142,7 +312,7 @@ public class Controller
     public void cmbCircuito_SelectionChanged(ActionEvent actionEvent)
     {
         if (cmbCircuito.getValue() == null) return;
-        if (cmbCircuito.getValue().toString().equals(todos))
+        if (cmbCircuito.getValue().equals(todos))
         {
             disableAndClear(cmbMesa);
         }
@@ -154,30 +324,42 @@ public class Controller
 
     public void btnFiltrar_OnPressed(ActionEvent actionEvent)
     {
-        if (cmbDistrito.getValue() != null)
-        {
-            colAgrupacion.setCellValueFactory(new PropertyValueFactory<Conteo, String>("nombreAgrupacion"));
-            colVotos.setCellValueFactory(new PropertyValueFactory<Conteo, String>("cantidad"));
+        colAgrupacion.setCellValueFactory(new PropertyValueFactory<Conteo, String>("nombreAgrupacion"));
+        colVotos.setCellValueFactory(new PropertyValueFactory<Conteo, String>("cantidad"));
 
-            tblConteos.getItems().clear();
-            tblConteos.getItems().addAll(buscarConteos());
-        }
+        tblConteos.getItems().clear();
+
+        Collection conteos = dbData ? cargarConteos() : buscarConteos();
+        tblConteos.getItems().addAll(conteos);
     }
 
+    /*
+     * Busca los conteos en memoria que fueron cargados desde los archivos.
+     */
     private Collection<Conteo> buscarConteos()
     {
         if (cmbDistrito.getValue().equals(todos)) return p.getConteos();
-        if (cmbSeccion.getValue().equals(todos)) return ((Distrito)cmbDistrito.getValue()).getConteos();
-        if (cmbCircuito.getValue().equals(todos)) return ((Seccion)cmbSeccion.getValue()).getConteos();
-        if (cmbMesa.getValue().equals(todos)) return ((Circuito)cmbCircuito.getValue()).getConteos();
-        return ((Mesa)cmbMesa.getValue()).getConteos();
+        if (cmbSeccion.getValue().equals(todos)) return cmbDistrito.getValue().getConteos();
+        if (cmbCircuito.getValue().equals(todos)) return cmbSeccion.getValue().getConteos();
+        if (cmbMesa.getValue().equals(todos)) return cmbCircuito.getValue().getConteos();
+        return cmbMesa.getValue().getConteos();
+    }
+
+    /*
+     * Busca los conteos para la regíon seleccionada en la base de datos.
+     */
+    private Collection<Conteo> cargarConteos()
+    {
+        if (cmbDistrito.getValue().equals(todos)) return ge.cargarConteos(p.getCodigo(), false);
+        if (cmbSeccion.getValue().equals(todos)) return ge.cargarConteos(cmbDistrito.getValue().getCodigo(), false);
+        if (cmbCircuito.getValue().equals(todos)) return ge.cargarConteos(cmbSeccion.getValue().getCodigo(), false);
+        if (cmbMesa.getValue().equals(todos)) return ge.cargarConteos(cmbCircuito.getValue().getCodigo(), false);
+        return ge.cargarConteos(cmbMesa.getValue().getCodigo(), true);
     }
 
     public void btnSalir_OnPressed(ActionEvent actionEvent)
     {
-        DataManager dm = new DataManager();
-        dm.clearData();
-//        Stage stage = (Stage) btnSalir.getScene().getWindow();
-//        stage.close();
+        Stage stage = (Stage) btnSalir.getScene().getWindow();
+        stage.close();
     }
 }

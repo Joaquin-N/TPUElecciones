@@ -5,12 +5,12 @@ import java.sql.*;
 public class DBHelper
 {
     Connection connection = null;
-    String url = "jdbc:mysql://db4free.net:3306/tpuelecciones";
+    String url = "jdbc:mysql://localhost:3306/tpu?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
     Statement st;
 
     public void connect() throws SQLException
     {
-        connection = DriverManager.getConnection (url,"cjn_tsb","D2gWGCiQnRaSjFB");
+        connection = DriverManager.getConnection (url,"tsb","1234");
         st = connection.createStatement();
     }
 

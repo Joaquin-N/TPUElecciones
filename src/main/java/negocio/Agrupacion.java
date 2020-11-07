@@ -1,5 +1,7 @@
 package negocio;
 
+import java.util.Objects;
+
 public class Agrupacion
 {
     private String codigo;
@@ -19,6 +21,22 @@ public class Agrupacion
     public String getNombre()
     {
         return nombre;
+    }
+
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Agrupacion that = (Agrupacion) o;
+        return codigo.equals(that.codigo);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(codigo) * 67;
     }
 
     @Override
