@@ -589,17 +589,6 @@ public class TSB_OAHashtable<K,V> implements Map<K,V>, Cloneable, Serializable
         return (index + i*i) % lenght;
     }
 
-//    private int nextIndex(int index, int i, int lenght){
-//        int nextIndex = index + i*i;
-//        if (nextIndex >= lenght) return nextIndex % lenght;
-//        return nextIndex;
-//    }
-//    // Exploración secuencial
-//    private int nextIndex(int index, int i, int lenght){
-//        if (index + 1 == lenght) return 0;
-//        return index+1;
-//    }
-
     /*
      * Recibe como parámetro una llave y busca en la tabla la entry correspondiente a esa llave.
      * Si la encuentra devuelve el valor asociado a la llave.
