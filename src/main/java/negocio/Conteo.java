@@ -30,6 +30,11 @@ public class Conteo
         return cantidad;
     }
 
+    public void sumar(int cantidad)
+    {
+        this.cantidad += cantidad;
+    }
+
     @Override
     public boolean equals(Object o)
     {
@@ -48,8 +53,9 @@ public class Conteo
         return hash;
     }
 
-    public void sumar(int cantidad)
+    @Override
+    public String toString()
     {
-        this.cantidad += cantidad;
+        return "Agrupación: " + getNombreAgrupacion() + " | Votos: " + cantidad;
     }
 }

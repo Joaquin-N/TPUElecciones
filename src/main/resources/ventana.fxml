@@ -13,8 +13,8 @@
     <children>
         <Pane fx:id="pane" prefHeight="470.0" prefWidth="840.0">
             <children>
-            <Button fx:id="btnCargar" layoutX="27.0" layoutY="23.0" mnemonicParsing="false" onAction="#btnCargar_OnPressed" text="Cargar desde BD" />
                 <Button fx:id="btnDirectorio" layoutX="355.0" layoutY="101.0" mnemonicParsing="false" onAction="#btnDirectorio_OnPressed" prefHeight="25.0" prefWidth="71.0" text="Cambiar" />
+            <Button fx:id="btnCargar" layoutX="27.0" layoutY="23.0" mnemonicParsing="false" onAction="#btnCargar_OnPressed" text="Cargar desde BD" />
                 <Label layoutX="45.0" layoutY="80.0" text="Directorio de búsqueda de archivos" />
                 <TextField fx:id="txtDirectorio" disable="true" layoutX="45.0" layoutY="101.0" prefHeight="25.0" prefWidth="302.0" />
                 <ComboBox fx:id="cmbDistrito" layoutX="122.0" layoutY="185.0" onAction="#cmbDistrito_SelectionChanged" prefHeight="25.0" prefWidth="233.0" />

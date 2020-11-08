@@ -14,7 +14,6 @@ import negocio.*;
 import javax.swing.*;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -62,6 +61,10 @@ public class Controller
         disableFields();
     }
 
+    /*
+     * Busca los archivos de resultados de elecciones en un directorio indicado por el usuario e
+     * indica al GestorelElecciones que realice la carga de los datos.
+     */
     public void btnDirectorio_OnPressed(ActionEvent actionEvent)
     {
         /* Abre una instancia del explorador de archivos para que el usuario seleccione el directorio donde
@@ -91,7 +94,8 @@ public class Controller
             };
 
             // Carga las regiones en pantalla y habilita los controles
-            task.setOnSucceeded(e -> {
+            task.setOnSucceeded(e ->
+            {
                 txtDirectorio.setText(path);
                 enableAndLoad(cmbDistrito, p);
                 dbData = false;
@@ -100,7 +104,8 @@ public class Controller
                 pane.getScene().setCursor(Cursor.DEFAULT);
             });
 
-            task.setOnFailed(e -> {
+            task.setOnFailed(e ->
+            {
                 disableButtons(false);
                 pane.getScene().setCursor(Cursor.DEFAULT);
                 txtDirectorio.setText("");
@@ -116,7 +121,9 @@ public class Controller
         }
     }
 
-
+    /*
+     * Llama al método cargarRegiones() del GestorElecciones para cargar los datos desde la base de datos.
+     */
     public void btnCargar_OnPressed(ActionEvent actionEvent)
     {
         // Habilita el cursor de espera
@@ -125,7 +132,7 @@ public class Controller
         disableFields();
         txtDirectorio.setText("");
 
-        // Llama al método cargarRegiones() del GestorElecciones para cargar los datos desde la base de datos
+        // Llama al método cargarRegiones() del GestorElecciones
         Task<Void> task = new Task<Void>() {
             @Override
             public Void call()
@@ -143,9 +150,11 @@ public class Controller
         };
 
         // Carga los distritos en el ComboBox, si se encuentran datos
-        task.setOnSucceeded(e -> {
+        task.setOnSucceeded(e ->
+        {
             pane.getScene().setCursor(Cursor.DEFAULT);
             disableButtons(false);
+            btnGuardar.setDisable(true);
             if(p == null)
             {
                 Object[] options = {"Aceptar"};
@@ -162,8 +171,10 @@ public class Controller
             pane.getScene().setCursor(Cursor.DEFAULT);
         });
 
-        task.setOnFailed(e -> {
+        task.setOnFailed(e ->
+        {
             disableButtons(false);
+            btnGuardar.setDisable(true);
             pane.getScene().setCursor(Cursor.DEFAULT);
             disableFields();
             Object[] options = {"Aceptar"};
@@ -184,8 +195,8 @@ public class Controller
     {
         // Habilita el cursor de espera
         pane.getScene().setCursor(Cursor.WAIT);
-        disableButtons(true);
         disableCombos(true);
+        disableButtons(true);
 
         // Llama al método GuardarRegiones() del GestorElecciones
         Task<Void> task = new Task<Void>() {
@@ -205,13 +216,15 @@ public class Controller
             }
         };
 
-        task.setOnSucceeded(e -> {
+        task.setOnSucceeded(e ->
+        {
             disableButtons(false);
             disableCombos(false);
             pane.getScene().setCursor(Cursor.DEFAULT);
         });
 
-        task.setOnFailed(e -> {
+        task.setOnFailed(e ->
+        {
             disableButtons(false);
             disableCombos(false);
             pane.getScene().setCursor(Cursor.DEFAULT);
@@ -227,7 +240,7 @@ public class Controller
     }
 
     /*
-     * Deshabilita los controles en pantalla
+     * Deshabilita y limpia los controles en pantalla.
      */
     private void disableFields()
     {
@@ -240,6 +253,9 @@ public class Controller
         tblConteos.getItems().clear();
     }
 
+    /*
+     * Deshabilita o habilita los botones.
+     */
     private void disableButtons(boolean disable)
     {
         btnFiltrar.setDisable(disable);
@@ -248,6 +264,9 @@ public class Controller
         btnGuardar.setDisable(disable);
     }
 
+    /*
+     * Deshabilita o habilita los ComboBox.
+     */
     private void disableCombos(boolean disable)
     {
         cmbDistrito.setDisable(disable);
@@ -257,7 +276,7 @@ public class Controller
     }
 
     /*
-     * Toma como parámetro un ComboBox, elimina su contenido y lo deshabilita
+     * Toma como parámetro un ComboBox, elimina su contenido y lo deshabilita.
      */
     private void disableAndClear(ComboBox<Region> combo)
     {
@@ -265,9 +284,9 @@ public class Controller
         combo.setDisable(true);
     }
 
-    /* Toma como parámetro un ComboBox y un objeto Region y carga el ComboBox con las subdivisiones de la Region
-     *  Agrega también al comboBox un elemento "<todos>"
-     *  Habilita el ComboBox
+    /* Toma como parámetro un ComboBox y un objeto Region y carga el ComboBox con las subdivisiones de la Region.
+     *  Agrega también al comboBox un elemento "<todos>".
+     *  Habilita el ComboBox.
      */
     private void enableAndLoad(ComboBox<Region> combo, Region r)
     {
@@ -280,6 +299,10 @@ public class Controller
         combo.setDisable(false);
     }
 
+    /*
+     * Los siguientes métodos detectan cambios en la selección de las regiones en los
+     * ComboBox y gestionan la carga o deshabilitación de los demás ComboBox.
+     */
     public void cmbDistrito_SelectionChanged(ActionEvent actionEvent)
     {
         if (cmbDistrito.getValue() == null) return;
@@ -322,6 +345,9 @@ public class Controller
         }
     }
 
+    /*
+     * Busca los conteos según la región seleccionada y los carga en la grilla.
+     */
     public void btnFiltrar_OnPressed(ActionEvent actionEvent)
     {
         colAgrupacion.setCellValueFactory(new PropertyValueFactory<Conteo, String>("nombreAgrupacion"));
@@ -346,17 +372,20 @@ public class Controller
     }
 
     /*
-     * Busca los conteos para la regíon seleccionada en la base de datos.
+     * Busca los conteos en la base de datos.
      */
     private Collection<Conteo> cargarConteos()
     {
-        if (cmbDistrito.getValue().equals(todos)) return ge.cargarConteos(p.getCodigo(), false);
-        if (cmbSeccion.getValue().equals(todos)) return ge.cargarConteos(cmbDistrito.getValue().getCodigo(), false);
-        if (cmbCircuito.getValue().equals(todos)) return ge.cargarConteos(cmbSeccion.getValue().getCodigo(), false);
-        if (cmbMesa.getValue().equals(todos)) return ge.cargarConteos(cmbCircuito.getValue().getCodigo(), false);
-        return ge.cargarConteos(cmbMesa.getValue().getCodigo(), true);
+        if (cmbDistrito.getValue().equals(todos)) return ge.cargarConteos(p.getCodigo());
+        if (cmbSeccion.getValue().equals(todos)) return ge.cargarConteos(cmbDistrito.getValue().getCodigo());
+        if (cmbCircuito.getValue().equals(todos)) return ge.cargarConteos(cmbSeccion.getValue().getCodigo());
+        if (cmbMesa.getValue().equals(todos)) return ge.cargarConteos(cmbCircuito.getValue().getCodigo());
+        return ge.cargarConteos(cmbMesa.getValue().getCodigo());
     }
 
+    /*
+     * Cierra la aplicación y los procesos que se estén ejecutando
+     */
     public void btnSalir_OnPressed(ActionEvent actionEvent)
     {
         Stage stage = (Stage) btnSalir.getScene().getWindow();

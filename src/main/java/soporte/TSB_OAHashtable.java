@@ -37,16 +37,6 @@ public class TSB_OAHashtable<K,V> implements Map<K,V>, Cloneable, Serializable
     // conteo de operaciones de cambio de tamaño (fail-fast iterator).
     protected transient int modCount;
 
-//    public String mostrar()
-//    {
-//        StringBuilder str = new StringBuilder("tamaño " + array.length + "\n");
-//        for(int i=0;i<array.length;i++)
-//        {
-//         str.append(array[i]+", ");
-//        }
-//        return str.toString();
-//    }
-
     //************************ Constructores.
 
     /**
@@ -520,16 +510,16 @@ public class TSB_OAHashtable<K,V> implements Map<K,V>, Cloneable, Serializable
             int index = this.h(key, temp.length);
 
             // insertarlo en el nuevo arreglo
-            int count = 0;
+            int cuadCount = 0;
             while(temp[index] != null)
             {
-                count++;
-                index = nextIndex(index, count, new_length);
+                cuadCount++;
+                index = nextIndex(index, cuadCount, new_length);
             }
             temp[index] = (Entry<K, V>) x;
         }
 
-        // cambiar la referencia table para que apunte a temp
+        // cambiar la referencia array para que apunte a temp
         this.array = temp;
     }
 
@@ -596,11 +586,15 @@ public class TSB_OAHashtable<K,V> implements Map<K,V>, Cloneable, Serializable
      * vuelta en la exploración.
      */
     private int nextIndex(int index, int i, int lenght){
-        int nextIndex = index + i*i;
-        if (nextIndex >= lenght) return nextIndex % lenght;
-        return nextIndex;
+        return (index + i*i) % lenght;
     }
 
+//    private int nextIndex(int index, int i, int lenght){
+//        int nextIndex = index + i*i;
+//        if (nextIndex >= lenght) return nextIndex % lenght;
+//        return nextIndex;
+//    }
+//    // Exploración secuencial
 //    private int nextIndex(int index, int i, int lenght){
 //        if (index + 1 == lenght) return 0;
 //        return index+1;

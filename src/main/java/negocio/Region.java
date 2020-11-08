@@ -29,6 +29,12 @@ public class Region
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
 
+    
+    /*
+     * Método que busca la región correspondiente al código pasado por parámetro en la TSB_OAHashtable "subregiones".
+     * Si la encuentra devuelve la región. Si no la encuentra, crea un nuevo objeto Región con el código indicado,
+     * lo pone en la TSB_OAHashtable y luego devuelve el objeto creado.
+     */
     public Region obtenerSubregion(String codigo)
     {
         Region r = subregiones.get(codigo);
@@ -40,13 +46,29 @@ public class Region
         return r;
     }
 
+
+    /*
+     * Devuelve el listado de regiones contenidas en la TSB_OAHashtable "subregiones".
+     */
     public Collection<Region> listarSubregiones()
     {
         return subregiones.values();
     }
 
-    public Collection<Conteo> getConteos() { return conteos.values(); }
 
+    /*
+     * Devuelve el listado de conteos contenidos en la TSB_OAHashtable "conteos".
+     */
+    public Collection<Conteo> getConteos()
+    {
+        return conteos.values();
+    }
+
+    /*
+     * Método que busca el conteo correspondiente a la agrupación pasada por parámetro en la TSB_OAHashtable "conteos".
+     * Si lo encuentra suma al conteo la cantidad de votos pasada por parámetro. Si no lo encuentra, crea un nuevo objeto
+     * Conteo asociado a la agrupación indicada y lo coloca en la TSB_OAHashtable. Luego le suma la cantidad de votos indicada.
+     */
     public void sumar(Agrupacion a, int votos)
     {
         Conteo c = conteos.get(a.getCodigo());

@@ -1,6 +1,5 @@
 package negocio;
 
-import soporte.TSBHashtable;
 import soporte.TSB_OAHashtable;
 
 import java.io.File;
@@ -28,9 +27,11 @@ public class ImportadorRegistros
      */
     public Region cargarDatosDeArchivos() throws FileNotFoundException
     {
+        System.out.println("Procesando archivos...");
         cargarRegiones();
         cargarAgrupaciones();
         cargarResultados();
+        System.out.println("Finalizado");
         return pais;
     }
 
